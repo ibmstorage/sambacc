@@ -190,6 +190,10 @@ task_rpm_build() {
         else
             rversion="$ver"
         fi
+        if [ "${SAMBACC_VERSION}" ]; then
+            ver="${SAMBACC_VERSION}"
+            rversion="${SAMBACC_VERSION}"
+        fi
         info "Using rpm-version=${rversion} pkg-version=${ver}"
         tdir="$(mktemp -d)"
         (
