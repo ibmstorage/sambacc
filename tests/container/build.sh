@@ -121,6 +121,7 @@ task_sys_deps() {
         python3-wheel \
         python3-pyxattr \
         python3-devel \
+        python3-inotify_simple \
         samba-common-tools \
         rpm-build \
         'python3dist(mypy)' \
