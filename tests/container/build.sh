@@ -123,7 +123,6 @@ task_sys_deps() {
         python3-devel \
         samba-common-tools \
         rpm-build \
-        'python3dist(inotify-simple)' \
         'python3dist(mypy)' \
         'python3dist(pytest)' \
         'python3dist(pytest-cov)' \
