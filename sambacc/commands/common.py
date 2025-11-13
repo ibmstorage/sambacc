@@ -17,9 +17,11 @@
 #
 
 import argparse
+import contextlib
 import json
 import logging
 import os
+import pathlib
 import time
 import typing
 
@@ -28,6 +30,7 @@ from sambacc import opener
 from sambacc import rados_opener
 from sambacc import samba_cmds
 from sambacc import url_opener
+from sambacc.typelets import Self
 
 from . import skips
 from .cli import Parser, ceph_id
@@ -73,6 +76,10 @@ class CommandContext:
         if self._opener is None:
             self._opener = opener.FallbackOpener([url_opener.URLOpener()])
         return self._opener
+
+    def copy(self) -> Self:
+        """Return a copy of ctx with cached objects/properties cleared."""
+        return self.__class__(self._cli)
 
 
 def split_entries(value: str) -> list[str]:
@@ -279,3 +286,39 @@ def global_args(parser: Parser) -> None:
         action="store_true",
         help="Enable debug level logging of sambacc.",
     )
+
+
+@contextlib.contextmanager
+def _pidfile(filename: str) -> typing.Iterator[None]:
+    path = pathlib.Path(filename)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    p2 = path.parent / f"{path.name}.tmp"
+    p2.write_text(str(os.getpid()))
+    p2.rename(path)
+    try:
+        yield
+    finally:
+        path.unlink()
+
+
+@contextlib.contextmanager
+def pidfiles(
+    *,
+    filenames: typing.Optional[list[str]] = None,
+    cli: typing.Optional[argparse.Namespace] = None,
+) -> typing.Iterator[None]:
+    pidfiles = filenames or []
+    if pfs := getattr(cli, "pidfiles", None):
+        assert not isinstance(pfs, str)
+        pidfiles.extend(pfs)
+    if pf := getattr(cli, "pidfile", None):
+        pidfiles.append(pf)
+
+    if not pidfiles:
+        yield None
+        return
+
+    with contextlib.ExitStack() as estack:
+        for pidfile in pidfiles:
+            estack.enter_context(_pidfile(pidfile))
+        yield None
