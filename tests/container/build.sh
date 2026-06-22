@@ -139,6 +139,8 @@ task_sys_deps() {
         ;;&
         el10,rhel)
             pkgs+=(python3)
+            info "installing epel"
+            "${dnf_cmd}" install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
         ;;&
         # common for all centos
         *,centos)
@@ -146,6 +148,8 @@ task_sys_deps() {
             yum_args=(--enablerepo=crb)
         ;;&
     esac
+    info "installing epel"
+    "${dnf_cmd}" install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
     "${dnf_cmd}" "${yum_args[@]}" install -y "${pkgs[@]}"
     "${dnf_cmd}" clean all
 }
